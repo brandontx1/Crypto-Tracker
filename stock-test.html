@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Test</title>
+<style>
+  body{background:#090c10;color:#c9d8e8;font-family:monospace;padding:20px}
+  h2{color:#00e5ff;margin-bottom:20px}
+  .result{background:#0e1318;border:1px solid #1e2d3d;padding:12px;margin:8px 0;border-radius:4px}
+  .sym{color:#ffc947;font-weight:bold;font-size:14px}
+  .price{color:#00ff88;font-size:18px;font-weight:bold}
+  .chg{font-size:12px}
+  .up{color:#00ff88}.dn{color:#ff3d5a}
+  .err{color:#ff3d5a}
+  .status{color:#4a6278;font-size:11px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<h2>📈 FINNHUB API TEST</h2>
+<div class="status" id="status">Testing connection...</div>
+<div id="results"></div>
+
+<script>
+// ⚠️ REPLACE THE TEXT BELOW WITH YOUR FINNHUB API KEY
+const API_KEY = 'd7dgoh1r01qggoeoa0kgd7dgoh1r01qggoeoa0l0';
+
+const STOCKS = [
+  {sym:'AAPL', name:'Apple'},
+  {sym:'MSFT', name:'Microsoft'},
+  {sym:'NVDA', name:'Nvidia'},
+  {sym:'GOOGL', name:'Google'},
+  {sym:'AMZN', name:'Amazon'},
+  {sym:'META', name:'Meta'},
+  {sym:'TSLA', name:'Tesla'},
+  {sym:'BRK.B', name:'Berkshire'},
+  {sym:'JPM', name:'JPMorgan'},
+  {sym:'V', name:'Visa'},
+];
+
+async function testStock(stock) {
+  const url = `https://finnhub.io/api/v1/quote?symbol=${stock.sym}&token=${API_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  if (!d.c || d.c === 0) throw new Error('No data returned');
+  return d;
+}
+
+async function runTest() {
+  const out = document.getElementById('results');
+  const status = document.getElementById('status');
+
+  if (API_KEY === 'YOUR_API_KEY_HERE') {
+    status.textContent = '⚠️ Replace YOUR_API_KEY_HERE with your Finnhub key first!';
+    status.style.color = '#ff3d5a';
+    return;
+  }
+
+  let passed = 0, failed = 0;
+
+  for (const stock of STOCKS) {
+    try {
+      const d = await testStock(stock);
+      const chg = d.dp || 0;
+      const div = document.createElement('div');
+      div.className = 'result';
+      div.innerHTML = `
+        <span class="sym">${stock.sym}</span> — ${stock.name}<br>
+        <span class="price">$${d.c.toFixed(2)}</span>
+        <span class="chg ${chg>=0?'up':'dn'}"> ${chg>=0?'▲':'▼'} ${Math.abs(chg).toFixed(2)}%</span>
+      `;
+      out.appendChild(div);
+      passed++;
+    } catch(e) {
+      const div = document.createElement('div');
+      div.className = 'result';
+      div.innerHTML = `<span class="sym">${stock.sym}</span> <span class="err">❌ ${e.message}</span>`;
+      out.appendChild(div);
+      failed++;
+    }
+    // Small delay to respect rate limits
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  status.textContent = `✅ ${passed} passed · ❌ ${failed} failed · API working: ${passed > 0 ? 'YES' : 'NO'}`;
+  status.style.color = passed > 0 ? '#00ff88' : '#ff3d5a';
+}
+
+runTest();
+</script>
+
+</body>
+</html>
