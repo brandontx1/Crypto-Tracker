@@ -1,0 +1,30 @@
+{
+  "name": "MoonTick",
+  "short_name": "MoonTick",
+  "description": "Live crypto, stocks & metals dashboard with buy/sell signals",
+  "start_url": "/Crypto-Tracker/",
+  "scope": "/Crypto-Tracker/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090c10",
+  "theme_color": "#090c10",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "finance",
+    "utilities"
+  ],
+  "lang": "en-US"
+}
