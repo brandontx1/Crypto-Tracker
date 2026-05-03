@@ -1,3 +1,4 @@
+self.addEventListener('message', e => { if (e.data?.type === 'SKIP_WAITING') self.skipWaiting(); });
 // ₿ To The Moon!! — Service Worker
 // Caches the app shell for fast loading and offline fallback
 
