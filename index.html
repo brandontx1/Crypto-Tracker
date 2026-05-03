@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoonTick</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MoonTick">
+<meta name="theme-color" content="#090c10">
+<link rel="apple-touch-icon" href="icon-192.png">
+<!-- Charts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+:root {
+  --bg:#090c10; --surface:#0e1318; --surface2:#141b22; --border:#1e2d3d;
+  --text:#c9d8e8; --muted:#4a6278; --accent:#00e5ff;
+  --green:#00ff88; --red:#ff3d5a; --gold:#ffc947; --silver:#b0c4d8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 700px 500px at 15% 15%,rgba(0,229,255,.05),transparent 65%),radial-gradient(ellipse 500px 700px at 85% 85%,rgba(168,85,247,.05),transparent 65%);pointer-events:none;z-index:0}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px;position:relative;z-index:1}
+
+/* HEADER */
+header{padding:16px 0 10px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px}
+.header-brand{display:flex;align-items:center;gap:14px;flex:1}
+.logo-text{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;color:var(--gold);text-shadow:0 0 30px rgba(255,201,71,.7),0 0 60px rgba(255,201,71,.25);letter-spacing:3px;line-height:1.25;flex:1}
+.header-controls{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.ts{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;white-space:nowrap}
+@media(min-width:700px){header{flex-direction:row;align-items:center;justify-content:space-between;}.header-brand{flex:1}}
+
+/* BUTTONS */
+.btn{background:#0d2035;border:1px solid var(--accent);color:#e0f8ff;padding:9px 14px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;border-radius:24px;box-shadow:0 0 14px rgba(0,229,255,.2);white-space:nowrap}
+.btn:hover{background:#164060;box-shadow:0 0 22px rgba(0,229,255,.4);color:#ffffff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-news{background:#0d2035;border:1px solid var(--gold);color:#fff5cc;padding:9px 14px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;border-radius:24px;box-shadow:0 0 14px rgba(255,201,71,.2);white-space:nowrap}
+.btn-news:hover{background:#2a1a05;box-shadow:0 0 22px rgba(255,201,71,.4);color:#ffffff}
+.btn-stock-news{background:#0d2035;border:1px solid #a855f7;color:#d4aaff;padding:9px 14px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s;border-radius:24px;box-shadow:0 0 14px rgba(168,85,247,.2);white-space:nowrap}
+.btn-stock-news:hover{background:#1a0d35;box-shadow:0 0 22px rgba(168,85,247,.4);color:#ffffff}
+
+/* SETTINGS GEAR BUTTON */
+.btn-settings{background:#0d1e2e;border:1px solid #2a4060;color:#7a9ab8;width:38px;height:38px;border-radius:50%;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.btn-settings:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px rgba(0,229,255,.2);transform:rotate(45deg)}
+
+/* SETTINGS MODAL */
+.settings-modal{background:#0c1520;border:1px solid var(--border);padding:24px;width:100%;max-width:400px;position:relative;border-radius:4px}
+.settings-title{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:3px;color:var(--accent);margin-bottom:20px}
+.settings-section{margin-bottom:20px}
+.settings-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:10px}
+.timeframe-btns{display:flex;gap:8px;flex-wrap:wrap}
+.tf-btn{padding:10px 16px;background:#0d1e2e;border:1px solid #2a4060;color:#b8d8e8;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;border-radius:20px;transition:all .2s;flex:1;text-align:center}
+.tf-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tf-btn.active{background:#0d2540;border-color:var(--accent);color:#fff;font-weight:700;box-shadow:0 0 14px rgba(0,229,255,.3)}
+
+/* SEARCH */
+.search-wrap{padding:12px 0;border-bottom:1px solid var(--border);position:relative}
+.search-input{width:100%;background:#0d1e2e;border:1px solid var(--accent);color:#e0f8ff;padding:12px 44px 12px 16px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border-radius:24px;outline:none;transition:all .2s;box-shadow:0 0 10px rgba(0,229,255,.1)}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 16px rgba(0,229,255,.25)}
+.search-input::placeholder{color:rgba(0,229,255,.45)}
+.search-clear{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:18px;cursor:pointer;display:none;background:none;border:none;line-height:1}
+.search-clear:hover{color:#ffffff}
+
+/* TABS — CRYPTO/STOCKS/METALS row + ALL ASSETS full width */
+.tabs-top{display:flex;gap:10px;padding:12px 0 6px}
+.tabs-bottom{display:flex;padding:0 0 12px;border-bottom:1px solid var(--border)}
+.tab{padding:11px 16px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .2s;white-space:nowrap;border-radius:24px;flex:1;text-align:center}
+/* Crypto tab — cyan */
+.tab.crypto-tab{background:#0d1e2e;border:1px solid var(--accent);color:#e0f8ff;box-shadow:0 0 8px rgba(0,229,255,.1)}
+.tab.crypto-tab:hover{background:#0d2540;color:#fff}
+.tab.crypto-tab.active{background:#0d2540;border-color:var(--accent);color:#fff;font-weight:700;box-shadow:0 0 18px rgba(0,229,255,.4)}
+/* Stocks tab — purple */
+.tab.stock-tab{background:#0d1020;border:1px solid #a855f7;color:#d4aaff;box-shadow:0 0 8px rgba(168,85,247,.1)}
+.tab.stock-tab:hover{background:#1a0d35;color:#fff}
+.tab.stock-tab.active{background:#1a0d35;border-color:#a855f7;color:#fff;font-weight:700;box-shadow:0 0 18px rgba(168,85,247,.4)}
+/* Metals tab — gold */
+.tab.metals-tab{background:#1a1200;border:1px solid var(--gold);color:#ffe599;box-shadow:0 0 8px rgba(255,201,71,.1)}
+.tab.metals-tab:hover{background:#2a1e00;color:#fff}
+.tab.metals-tab.active{background:#2a1e00;border-color:var(--gold);color:#fff;font-weight:700;box-shadow:0 0 18px rgba(255,201,71,.4)}
+/* All Assets — full width neutral */
+.tab.all-tab{background:#0d1e2e;border:1px solid #3a5070;color:#b8d8e8;width:100%}
+.tab.all-tab:hover{border-color:#6090b0;color:#fff}
+.tab.all-tab.active{background:#0d2035;border-color:#b8d8e8;color:#fff;font-weight:700;box-shadow:0 0 14px rgba(184,216,232,.2)}
+
+/* FILTER BUTTONS — BUY/SELL/HOLD/SHOW ALL */
+.filter-row{display:flex;gap:10px;padding:12px 0;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.filter-btn{padding:11px 0;background:#0d1e2e;border:1px solid var(--accent);color:#e0f8ff;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .2s;border-radius:24px;flex:1;text-align:center;min-width:calc(25% - 8px);box-shadow:0 0 8px rgba(0,229,255,.1)}
+.filter-btn:hover{background:#0d2540;box-shadow:0 0 14px rgba(0,229,255,.25);color:#ffffff}
+.filter-btn.active-buy{background:#0a2818;border-color:var(--green);color:#aaffcc;font-weight:700;box-shadow:0 0 14px rgba(0,255,136,.35)}
+.filter-btn.active-sell{background:#280a12;border-color:var(--red);color:#ffaaaa;font-weight:700;box-shadow:0 0 14px rgba(255,61,90,.35)}
+.filter-btn.active-hold{background:#0d2540;border-color:var(--accent);color:#ffffff;font-weight:700;box-shadow:0 0 14px rgba(0,229,255,.35)}
+
+/* SIGNAL BAR */
+.sig-bar{display:flex;gap:8px;padding:12px 0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);min-height:48px;align-items:center}
+.sig-bar::-webkit-scrollbar{display:none}
+.pill{display:flex;align-items:center;gap:6px;padding:4px 12px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;white-space:nowrap;border:1px solid;opacity:0;animation:fadeIn .5s ease forwards}
+.pill.buy{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.06)}
+.pill.sell{border-color:var(--red);color:var(--red);background:rgba(255,61,90,.06)}
+.pill.watch{border-color:var(--gold);color:var(--gold);background:rgba(255,201,71,.06)}
+.pdot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+
+/* GRID & CARDS */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:13px;padding:16px 0 40px}
+.card{background:var(--surface);border:1px solid var(--border);padding:17px;position:relative;overflow:hidden;opacity:0;transform:translateY(6px);animation:slideUp .45s ease forwards;transition:border-color .2s,box-shadow .2s}
+.card.highlighted{border-color:var(--accent);box-shadow:0 0 20px rgba(0,229,255,.25)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ca,var(--accent));opacity:.75}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.aname{font-size:12px;font-weight:800;letter-spacing:2px}
+.asym{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:1px}
+.pblock{text-align:right}
+.price{font-family:'Space Mono',monospace;font-size:16px;font-weight:700}
+.chg{font-family:'Space Mono',monospace;font-size:10px;margin-top:2px}
+.chg.up{color:var(--green)}.chg.dn{color:var(--red)}
+.spark{height:90px;margin:8px 0;cursor:pointer;position:relative}
+.spark:hover::after{content:'TAP TO EXPAND';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);background:rgba(9,12,16,.6);border:1px solid rgba(0,229,255,.2)}
+.inds{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.ind{background:var(--surface2);border:1px solid var(--border);padding:7px 8px}
+.ilabel{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:2px}
+.ival{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.isig{font-size:8px;margin-top:1px;letter-spacing:1px;font-family:'Space Mono',monospace}
+.bar-bg{height:3px;background:var(--border);margin-top:4px;overflow:hidden}
+.bar-fill{height:100%;transition:width 1s ease}
+.ma-tag{font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;border:1px solid;letter-spacing:1px;display:inline-block;margin-top:3px}
+.ma-tag.above{border-color:rgba(0,255,136,.4);color:var(--green)}
+.ma-tag.below{border-color:rgba(255,61,90,.4);color:var(--red)}
+.sbadge{display:flex;align-items:center;justify-content:center;gap:5px;padding:6px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;font-weight:700;margin-top:10px;border:1px solid;width:100%}
+.sbadge.BUY{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.07)}
+.sbadge.SELL{border-color:var(--red);color:var(--red);background:rgba(255,61,90,.07)}
+.sbadge.HOLD{border-color:var(--muted);color:var(--muted)}
+.sbadge.WATCH{border-color:var(--gold);color:var(--gold);background:rgba(255,201,71,.07)}
+
+/* STOCK CARDS */
+.stock-badge{display:inline-flex;align-items:center;gap:4px;font-family:'Space Mono',monospace;font-size:8px;padding:2px 7px;border:1px solid #a855f7;color:#d4aaff;background:rgba(168,85,247,.08);margin-top:3px;letter-spacing:1px}
+.market-note{font-family:'Space Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:1px;text-align:center;margin-top:6px;padding:4px;background:rgba(255,201,71,.05);border:1px solid rgba(255,201,71,.15)}
+
+/* MARKET STATUS BAR */
+.mkt-bar{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);align-items:center;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;white-space:nowrap}
+.mkt-bar::-webkit-scrollbar{display:none}
+.mkt-stat{display:flex;align-items:center;gap:4px;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0}
+.mkt-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.mkt-dot{width:7px;height:7px;border-radius:50%}
+.mkt-open .mkt-dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+.mkt-open .mkt-label{color:var(--green)}
+.mkt-closed .mkt-dot{background:var(--red)}
+.mkt-closed .mkt-label{color:var(--red)}
+.mkt-live .mkt-dot{background:var(--accent);box-shadow:0 0 6px var(--accent);animation:pulse 2s infinite}
+.mkt-live .mkt-label{color:var(--accent)}
+
+/* SECTION LABELS */
+.section-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);padding:14px 0 4px;border-top:1px solid var(--border);margin-top:8px}
+
+/* STOCK TAB */
+.tab.stock-tab{border-color:#a855f7;color:#d4aaff}
+.tab.stock-tab.active{background:#1a0d35;border-color:#a855f7;color:#fff;box-shadow:0 0 18px rgba(168,85,247,.4)}
+
+/* STOCK NEWS BUTTON */
+.btn-stock-news{background:#0d2035;border:1px solid #a855f7;color:#d4aaff;padding:10px 18px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .2s;border-radius:24px;box-shadow:0 0 14px rgba(168,85,247,.2)}
+.btn-stock-news:hover{background:#1a0d35;box-shadow:0 0 22px rgba(168,85,247,.4);color:#ffffff}
+
+/* STOCK PILL IN SIGNAL BAR */
+.pill.stock-buy{border-color:#a855f7;color:#d4aaff;background:rgba(168,85,247,.06)}
+.pill.stock-sell{border-color:#ff6b9d;color:#ff6b9d;background:rgba(255,107,157,.06)}
+.pill.stock-watch{border-color:#c084fc;color:#c084fc;background:rgba(192,132,252,.06)}
+#loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:0;transition:opacity .7s ease}
+#loader.hide{opacity:0;pointer-events:none}
+.hero-content-legacy{display:flex;flex-direction:column;align-items:center;gap:16px;animation:heroFloat 3s ease-in-out infinite;position:relative;z-index:2}
+.hero-title{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--gold);text-shadow:0 0 30px rgba(255,201,71,.8),0 0 60px rgba(255,201,71,.3);letter-spacing:4px;text-align:center;line-height:1.3}
+.hero-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:3px;margin-top:4px}
+.lbar{width:220px;height:2px;background:var(--border);overflow:hidden;margin-top:24px}
+.lfill{height:100%;background:var(--accent);width:0;box-shadow:0 0 10px var(--accent);transition:width .4s ease}
+.lsub{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:10px}
+
+/* Shooting stars */
+.hero-stars{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+.shooting-star{
+  position:absolute;
+  width:2px;
+  height:2px;
+  background:white;
+  border-radius:50%;
+  box-shadow:0 0 4px 1px rgba(255,255,255,.8);
+}
+.shooting-star::after{
+  content:'';
+  position:absolute;
+  top:50%;left:0;
+  transform:translateY(-50%);
+  width:80px;height:1px;
+  background:linear-gradient(to left,rgba(255,255,255,.8),transparent);
+  transform-origin:right center;
+}
+@keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes shoot{
+  0%{opacity:0;transform:translate(0,0) rotate(var(--angle))}
+  5%{opacity:1}
+  90%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--angle))}
+}
+
+/* Sticky compact header */
+#siteHeader{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(9,12,16,.97);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  padding:8px 0;
+  opacity:0;
+  transform:translateY(-100%);
+  transition:opacity .4s ease, transform .4s ease;
+  pointer-events:none;
+}
+#siteHeader .wrap{display:flex;flex-direction:column;gap:6px;}
+#siteHeader.visible{opacity:1;transform:translateY(0);pointer-events:all;}
+#siteHeader.hidden{transform:translateY(-100%);opacity:0;}
+.header-brand{display:flex;align-items:center;gap:12px;}
+.logo-text{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--gold);text-shadow:0 0 20px rgba(255,201,71,.6);letter-spacing:3px;line-height:1.2;}
+.header-controls{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;}
+@media(min-width:600px){
+  #siteHeader .wrap{flex-direction:row;align-items:center;justify-content:space-between;}
+}
+@media(max-width:480px){.logo-text{font-size:15px;letter-spacing:2px}}
+
+/* Push content below fixed header */
+.wrap{padding-top:0;transition:padding-top .4s ease;}
+.wrap.header-shown{padding-top:150px;}
+
+/* NEWS TEXT — bigger for readability */
+.news-headline{font-size:15px;font-weight:600;line-height:1.5;color:var(--text);margin-bottom:5px}
+.news-source{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:6px}
+.news-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px}
+
+/* CHART MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:300;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:#0c1520;border:1px solid var(--border);padding:20px;width:100%;max-width:800px;max-height:90vh;overflow-y:auto;position:relative;border-radius:4px}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-title{font-size:14px;font-weight:800;letter-spacing:2px}
+.modal-price{font-family:'Space Mono',monospace;font-size:20px;font-weight:700}
+.modal-chg{font-family:'Space Mono',monospace;font-size:11px;margin-top:2px}
+.modal-close{background:transparent;border:1px solid var(--muted);color:var(--muted);width:32px;height:32px;cursor:pointer;font-size:16px;border-radius:50%;transition:all .2s}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+.modal-chart{height:300px;margin:8px 0;position:relative}
+.modal-hover-info{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);text-align:center;letter-spacing:1px;min-height:20px;padding:6px;background:#0a1520;border:1px solid var(--border);border-radius:4px;margin-bottom:8px}
+.modal-inds{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:16px}
+.modal-ind{background:var(--surface2);border:1px solid var(--border);padding:10px 12px}
+
+/* NEWS MODAL */
+.news-modal{background:#0c1520;border:1px solid var(--border);padding:20px;width:100%;max-width:700px;max-height:88vh;overflow-y:auto;position:relative;border-radius:4px}
+.news-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px}
+.news-title{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:3px;color:var(--gold)}
+.news-item{padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s}
+.news-item:hover{background:rgba(14,19,24,.9);margin:0 -20px;padding:14px 20px}
+.news-item:last-child{border-bottom:none}
+.news-source{font-family:'Space Mono',monospace;font-size:8px;color:var(--accent);letter-spacing:2px;margin-bottom:5px}
+.news-headline{font-size:13px;font-weight:600;line-height:1.4;color:var(--text);margin-bottom:4px}
+.news-date{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px}
+.news-loading{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:30px;letter-spacing:2px}
+.news-err{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);text-align:center;padding:20px;letter-spacing:1px}
+
+.err-bar{font-family:'Space Mono',monospace;font-size:10px;color:var(--red);padding:10px 14px;border:1px solid var(--red);background:rgba(255,61,90,.06);margin:14px 0;letter-spacing:1px;display:none}
+.api-src{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);padding:6px 0;letter-spacing:1px;border-top:1px solid var(--border);margin-top:4px}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+@keyframes fadeIn{to{opacity:1}}
+@keyframes slideUp{to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.modal-chart{height:220px}.logo-text{font-size:12px}}
+
+/* ── ROCKET ANIMATION ── */
+#heroRocket{transform-origin:center center;}
+@keyframes rocketLaunch{
+  0%{opacity:1;transform:translate(0,0) scale(1) rotate(0deg)}
+  20%{transform:translate(-10px,-30px) scale(1.08) rotate(-8deg)}
+  100%{opacity:0;transform:translate(calc(-50vw + 60px),calc(-50vh + 50px)) scale(0.12) rotate(-25deg)}
+}
+
+/* ── SETTINGS FULL SCREEN ── */
+#settingsModal{position:fixed;inset:0;background:rgba(0,0,0,.0);z-index:300;display:none;flex-direction:column;transition:background .3s}
+#settingsModal.open{display:flex;background:rgba(0,0,0,.95)}
+.settings-inner{background:#090c10;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);transition:transform .35s ease}
+#settingsModal.open .settings-inner{transform:translateY(0)}
+.settings-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.settings-title{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:3px;color:var(--accent)}
+.settings-body{flex:1;overflow-y:auto;padding:16px 20px;-webkit-overflow-scrolling:touch}
+.settings-section{margin-bottom:24px}
+.settings-section-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.settings-apply{margin:0 20px 32px;padding:14px;background:#0d2540;border:1px solid var(--accent);color:#e0f8ff;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;cursor:pointer;border-radius:24px;transition:all .2s;width:calc(100% - 40px);flex-shrink:0}
+.settings-apply:hover{background:#164060;color:#fff}
+
+/* ── WATCHLIST UI ── */
+.watch-section{margin-bottom:10px;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.watch-section-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;background:var(--surface);user-select:none;-webkit-user-select:none}
+.watch-section-header:hover{background:var(--surface2)}
+.watch-section-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;font-weight:700}
+.watch-section-title.metals{color:var(--gold)}
+.watch-section-title.crypto{color:var(--accent)}
+.watch-section-title.stocks{color:#d4aaff}
+.watch-section-right{display:flex;align-items:center;gap:10px}
+.watch-count{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}
+.watch-arrow{font-size:10px;color:var(--muted)}
+.watch-items{padding:4px 8px 8px;background:var(--bg);display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px}
+.watch-items.collapsed{display:none}
+
+/* UNSELECTED — clearly OFF, dark and muted */
+.watch-item{
+  display:flex;align-items:center;gap:7px;padding:7px 9px;
+  background:#0a0c0e;border:1px solid #1e2030;
+  border-radius:4px;cursor:pointer;transition:all .15s;
+}
+.watch-item:hover{border-color:#3a4060;background:#0e1118}
+.watch-item-name{font-family:'Space Mono',monospace;font-size:8px;color:#506070;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.watch-item-sym{font-family:'Space Mono',monospace;font-size:7px;color:#304050}
+
+/* SELECTED — bright green, impossible to miss */
+.watch-item.selected{
+  background:#061a0e;
+  border:2px solid #00ff88;
+  box-shadow:0 0 10px rgba(0,255,136,.3),inset 0 0 8px rgba(0,255,136,.05);
+}
+.watch-item.selected:hover{box-shadow:0 0 14px rgba(0,255,136,.45)}
+.watch-item.selected .watch-item-name{color:#00ff88;font-weight:700}
+.watch-item.selected .watch-item-sym{color:#00cc66}
+
+/* Checkbox */
+.watch-checkbox{width:15px;height:15px;border:2px solid #304050;border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#0a0c0e;transition:all .15s}
+.watch-item.selected .watch-checkbox{background:#00ff88;border-color:#00ff88}
+.watch-checkbox-tick{font-size:10px;color:#061a0e;display:none;font-weight:900;line-height:1}
+.watch-item.selected .watch-checkbox-tick{display:block}
+
+/* ── QR MODAL ── */
+.qr-modal{background:#0c1520;border:1px solid var(--border);padding:24px;width:100%;max-width:300px;position:relative;border-radius:4px;text-align:center}
+.qr-title{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:12px}
+#qrcode{display:flex;justify-content:center;margin:12px 0}
+#qrcode canvas,#qrcode img{border-radius:8px}
+.qr-url{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;word-break:break-all;margin-top:8px;padding:8px;background:var(--surface);border-radius:4px}
+
+/* ── EMPTY WATCHLIST MSG ── */
+.empty-msg{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);text-align:center;padding:60px 20px;letter-spacing:2px;line-height:2.2}
+
+/* ── HIDDEN ASSET PILLS ── */
+.pill.hidden-asset{border-style:dashed;opacity:0.55}
+.pill{cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- HERO SPLASH -->
+<div id="loader">
+  <div class="hero-stars" id="heroStars"></div>
+  <div class="hero-content" id="heroContent">
+    <div style="position:relative;display:inline-block">
+      <img style="width:260px;height:260px;object-fit:contain;animation:heroFloat 3s ease-in-out infinite;display:block" src="data:image/webp;base64,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" alt="MoonTick"/>
+      <img id="heroRocket" src="data:image/webp;base64,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" alt="rocket" style="position:absolute;bottom:-10px;right:-15px;width:110px;height:110px;object-fit:contain;transform-origin:center center"/>
+    </div>
+    <div class="hero-title">MOONTICK</div>
+    <div class="hero-sub" id="lsub">FETCHING LIVE DATA...</div>
+    <div class="lbar"><div class="lfill" id="lfill"></div></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- STICKY COMPACT HEADER -->
+  <div id="siteHeader">
+    <div class="wrap">
+      <!-- Row 1: Brand only -->
+      <div class="header-brand">
+        <img id="headerMoonImg" src="data:image/webp;base64,UklGRroFAABXRUJQVlA4WAoAAAAQAAAALQAALQAAQUxQSMgBAAABkIPtn2E7v/nPxLZt206X55SxUds22jy3i5NKlW3bTrqUt4uxM2d+zT2zOzdqI2IC8G+rRBujRZUKMYKCYiSWFgDVu+amTc11rw5ASwylgc6rrxSzxOIzs5sAOjsBhhy1JOmsdST5cWcbKJWRRvXdJK3zLNE7S35eCkgmGh1eMe88g70lj1WFZKDRs5gJ0/uE92tCUglaFNMy04TXy2qVQuky92kZ6EOYcDt0Co3lTJi1T5iDDhLV4FPeB/gUdP59OaVCDLbQMqLjNJgAhQoffD6KvwMJ0BjJPGN6b9tAChks9TYKLWfBhOxntKIQwSW6WEegCyncjeV4ARKgbsc7C11I42Qsy0MhBttoY22FCZkay3FMiKDFL/oYnt8bQQpBcNW7GM5fgCDQYDLjcBxMiJJyb73LzvlXZZUKgUGOSXaWo6ARrrGHSVYJ90AjpdLl7zDJJuG9SqLSQFDnCROfzid8Wh+C9IJaZ0nrg7y35NnaEGQpwKofpMv7kryz5I+NBoJspQy6HU5I5p11zpP8caA7jELWooH+Ra9+ssRPdzd2ATRiigaq9h6/YO26BaO7VAFEEFk0FACloIwRlEKlRBtTppzG/ztWUDggzAMAAFATAJ0BKi4ALgA+USKORKOiIRVdVVQ4BQS1AE6ZQgiPTF8BxRJVoUu2M8wHnIejreKPQA6Sz90PSHzQD+c7bfhd9ZZVv6TrLo0DkDOk4EdTNzIp03+48X30P/1PcF/V3/ketJ7BfQ2/WZfis8u3mLvSbE2fx8hvnP6Pxs8MydCBgY6sYaitxfYjs8jKKdJ9dIMr34og1kormqffSrx/KE42IAAA/v+Tl78J3CJRD0jBCBiXBjkLgs7s086d6hPgv81/ExaB/XFzFWHkB/37TF8XSwBfQ6LciDWy03TzfwW8/Cj+w+Y/ExZWDLf0e+UEC42tBTth0dZD3e8u7cmdjnmUCjbFPLbod3L/M3sR09FmU73s5+X8y5bbtXtC3G7zzBx38Ec2+SOCox92g+AFfGwDK+xuGoCXaF8KFPdKj1w0AI9MnGy1EF5RD6m0T4OshpSK6qwO0maBUxvNanhwjl+uWR+1Ee/RpKQm9wNF15jvvhOdpecvR73/w/nwJDxaOyYzKdv1P4UBdG/Bv/544mw8zYxDbLEYyC+57IALVxWLlrUBZHc7/42pZ/fP/yPxKttZF7ciVwZyglqM4//Y5TEryoK3FrgQe9B5tMWvBzQcXSKsgDJ0xGe4jM8tj6PlbO3jFx3MJe6TOklavv4vgK6xsdmaPgliqxsX2F+OnGWL49Xt//lH3Jz8R9Fre28wpy8Wc/yxx+n3LkBumqhxxqX5Zi2mOPmugIKnfd1j5tir8+c7PqjqRv4LWmIy2/amGu5CY8F9GoR08zshJYOV74FQrN3uCNFC0+r/w+3owwGKj8PoczJ8dJUcbTq9vZUy8fkxHkWUtAVnTO2vDvFsHonNXJlSft9+CN4YOhNWrBBn7J2OyuCGZUj92Hp65H+jM/9329Bky5BRX8kS13lJSvSvHj9WFNOEDocbyOR9d43IpF2Y4Zi3fJZvsCNYAdOHD7ONwUlYc3O1pks2kRkzwic1pw5Ekj9Lc+Ny6obc4RfSZmQoALKpN4/+ExSuUF2L9mqhxpxSAMJMomkCAt/8A0/yTqnSR/4XkB/bBNck//E1lNN+qLwfbARrZ8a7GVD0CtZBLhK+WDcyTwh7SnbOlaD/Pld2Aakzwhg0VXbYoHjUwHPcvaYH+V8On6K6sdcOvsqU//wOoxNXq1JE/okwkiFJV1yS5aChcisZM+n2uArPvfnKvYzRiSWK2/upSgjotxGL24UgT12gpKghoIASwxLyN91/hXefvaXvv+RuOz2mqUL8EirWf8BTDu+aR2Z3ebQTAEcbDu9XTVgAAA==" alt="MoonTick" style="width:42px;height:42px;object-fit:contain;transition:filter .5s"/>
+        <div class="logo-text">MOONTICK</div>
+      </div>
+      <!-- Row 2: Buttons -->
+      <div class="header-controls">
+        <button class="btn-news" onclick="openCryptoNews()">📰 CRYPTO NEWS</button>
+        <button class="btn-stock-news" onclick="openStockNews()">📈 STOCK NEWS</button>
+        <button class="btn" id="refreshBtn" onclick="loadAll()">↻ REFRESH</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKET STATUS BAR with settings gear -->
+  <div class="mkt-bar" id="mktBar">
+    <button class="btn-settings" onclick="openSettings()" title="Settings">⚙️</button>
+    <button class="btn-settings" onclick="openQR()" title="Share App" style="font-size:14px">📲</button>
+    <div class="mkt-stat mkt-live"><div class="mkt-dot"></div><span class="mkt-label">CRYPTO: LIVE</span></div>
+    <span class="ts" id="ts" style="flex-shrink:0">—</span>
+    <div class="mkt-stat" id="nyseStatus"><div class="mkt-dot"></div><span class="mkt-label">NYSE: —</span></div>
+    <div class="mkt-stat" id="nasdaqStatus"><div class="mkt-dot"></div><span class="mkt-label">NASDAQ: —</span></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <input class="search-input" id="searchInput" type="text" placeholder="🔍  SEARCH ASSETS, STOCKS, METALS..." oninput="doSearch(this.value)"/>
+    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+  </div>
+
+  <!-- TABS — asset types top, ALL ASSETS full width below -->
+  <div class="tabs-top">
+    <button class="tab crypto-tab active" onclick="switchTab('crypto',this)">CRYPTO</button>
+    <button class="tab stock-tab" onclick="switchTab('stocks',this)">📈 STOCKS</button>
+    <button class="tab metals-tab" onclick="switchTab('metals',this)">⬡ METALS</button>
+  </div>
+  <div class="tabs-bottom">
+    <button class="tab all-tab" onclick="switchTab('all',this)">ALL ASSETS</button>
+  </div>
+
+  <!-- FILTER BUTTONS — BUY / SELL / HOLD / SHOW ALL -->
+  <div class="filter-row">
+    <button class="filter-btn" onclick="filterSignal('buy',this)">● BUY</button>
+    <button class="filter-btn" onclick="filterSignal('sell',this)">● SELL</button>
+    <button class="filter-btn" onclick="filterSignal('hold',this)">● HOLD</button>
+    <button class="filter-btn" onclick="filterSignal('all',this)">SHOW ALL</button>
+  </div>
+
+  <div class="sig-bar" id="sigBar"></div>
+  <div class="err-bar" id="errBar"></div>
+  <div class="api-src" id="apiSrc"></div>
+  <div class="section-label" data-section="metals" id="metalsLabel">⬡ METALS</div>
+  <div class="grid" id="metalsGrid"></div>
+  <div class="section-label" data-section="crypto" id="cryptoLabel">₿ CRYPTO</div>
+  <div class="grid" id="cryptoGrid"></div>
+  <div class="section-label" data-section="stocks" id="stocksLabel">📈 STOCKS</div>
+  <div class="grid" id="stocksGrid"></div>
+  <div class="empty-msg" id="emptyMsg" style="display:none">📭 NO ASSETS SELECTED<br><span style="font-size:9px">TAP ⚙️ SETTINGS TO MANAGE YOUR WATCHLIST</span></div>
+</div>
+
+<!-- CHART MODAL -->
+<div class="modal-bg" id="chartModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">—</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px" id="modalSym">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="modal-price" id="modalPrice">—</div>
+        <div class="modal-chg" id="modalChg">—</div>
+      </div>
+      <button class="modal-close" onclick="closeChart()">✕</button>
+    </div>
+    <div class="modal-hover-info" id="modalHover">HOVER OR TAP CHART FOR PRICE AT THAT TIME</div>
+    <div class="modal-chart"><canvas id="modalCanvas"></canvas></div>
+    <div class="modal-inds" id="modalInds"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL — FULL SCREEN -->
+<div id="settingsModal">
+  <div class="settings-inner">
+    <div class="settings-header">
+      <div class="settings-title">⚙️ MOONTICK SETTINGS</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-section">
+        <div class="settings-section-label">CHART TIMEFRAME</div>
+        <div class="timeframe-btns">
+          <button class="tf-btn" onclick="setTimeframe('1H',this)">1H</button>
+          <button class="tf-btn active" onclick="setTimeframe('1D',this)">1D</button>
+          <button class="tf-btn" onclick="setTimeframe('1W',this)">1W</button>
+          <button class="tf-btn" onclick="setTimeframe('1M',this)">1M</button>
+          <button class="tf-btn" onclick="setTimeframe('1Y',this)">1Y</button>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;line-height:1.8">
+          STOCKS USE FINNHUB CANDLES · CRYPTO USES COINGECKO DATA
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-label">MY WATCHLIST</div>
+        <div class="watch-section">
+          <div class="watch-section-header" onclick="toggleWatchSection('metals')">
+            <span class="watch-section-title metals">⬡ METALS</span>
+            <div class="watch-section-right">
+              <span class="watch-count" id="wc-metals">2/2</span>
+              <span class="watch-arrow" id="wa-metals">▶</span>
+            </div>
+          </div>
+          <div class="watch-items collapsed" id="wi-metals"></div>
+        </div>
+        <div class="watch-section">
+          <div class="watch-section-header" onclick="toggleWatchSection('crypto')">
+            <span class="watch-section-title crypto">₿ CRYPTO</span>
+            <div class="watch-section-right">
+              <span class="watch-count" id="wc-crypto">—</span>
+              <span class="watch-arrow" id="wa-crypto">▶</span>
+            </div>
+          </div>
+          <div class="watch-items collapsed" id="wi-crypto"></div>
+        </div>
+        <div class="watch-section">
+          <div class="watch-section-header" onclick="toggleWatchSection('stocks')">
+            <span class="watch-section-title stocks">📈 STOCKS</span>
+            <div class="watch-section-right">
+              <span class="watch-count" id="wc-stocks">—</span>
+              <span class="watch-arrow" id="wa-stocks">▶</span>
+            </div>
+          </div>
+          <div class="watch-items collapsed" id="wi-stocks"></div>
+        </div>
+      </div>
+    </div>
+    <button class="settings-apply" onclick="applySettings()">✓ APPLY SETTINGS</button>
+  </div>
+</div>
+
+<!-- QR CODE MODAL -->
+<div class="modal-bg" id="qrModal">
+  <div class="qr-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="qr-title">📲 SHARE MOONTICK</div>
+      <button class="modal-close" onclick="closeQR()">✕</button>
+    </div>
+    <div id="qrcode"></div>
+    <div class="qr-url">brandontx1.github.io/Crypto-Tracker/</div>
+    <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;line-height:1.8;text-align:center">
+      SCAN TO OPEN · TAP SHARE → ADD TO HOME SCREEN
+    </div>
+  </div>
+</div>
+
+<!-- CRYPTO NEWS MODAL -->
+<div class="modal-bg" id="cryptoNewsModal">
+  <div class="news-modal">
+    <div class="news-header">
+      <div class="news-title">📰 CRYPTO & METALS NEWS</div>
+      <button class="modal-close" onclick="closeCryptoNews()">✕</button>
+    </div>
+    <div id="cryptoNewsFeed"><div class="news-loading">LOADING LATEST NEWS...</div></div>
+  </div>
+</div>
+
+<!-- STOCK NEWS MODAL -->
+<div class="modal-bg" id="stockNewsModal">
+  <div class="news-modal">
+    <div class="news-header">
+      <div class="news-title" style="color:#d4aaff">📈 STOCK MARKET NEWS</div>
+      <button class="modal-close" onclick="closeStockNews()">✕</button>
+    </div>
+    <div id="stockNewsFeed"><div class="news-loading">LOADING MARKET NEWS...</div></div>
+  </div>
+</div>
+
+<script>
+// ── FINNHUB API KEY ───────────────────────────────────────────
+// ⚠️ REPLACE YOUR_API_KEY_HERE WITH YOUR FINNHUB KEY BEFORE COMMITTING
+const FINNHUB_KEY = 'd7dhb19r01qggoeobpfgd7dhb19r01qggoeobpg0;
+
+const STOCKS = [
+  // Big Tech
+  {sym:'AAPL', name:'APPLE'},
+  {sym:'MSFT', name:'MICROSOFT'},
+  {sym:'NVDA', name:'NVIDIA'},
+  {sym:'GOOGL', name:'GOOGLE'},
+  {sym:'AMZN', name:'AMAZON'},
+  {sym:'META', name:'META'},
+  {sym:'TSLA', name:'TESLA'},
+  {sym:'AMD', name:'AMD'},
+  {sym:'NFLX', name:'NETFLIX'},
+  {sym:'ORCL', name:'ORACLE'},
+  // Finance
+  {sym:'JPM', name:'JPMORGAN'},
+  {sym:'BAC', name:'BANK OF AMERICA'},
+  {sym:'V', name:'VISA'},
+  {sym:'MA', name:'MASTERCARD'},
+  {sym:'GS', name:'GOLDMAN SACHS'},
+  // Energy & Industrial
+  {sym:'XOM', name:'EXXON'},
+  {sym:'CVX', name:'CHEVRON'},
+  {sym:'CAT', name:'CATERPILLAR'},
+  {sym:'BA', name:'BOEING'},
+  // Healthcare
+  {sym:'JNJ', name:'JOHNSON & JOHNSON'},
+  {sym:'UNH', name:'UNITEDHEALTH'},
+  {sym:'PFE', name:'PFIZER'},
+  // Crypto-adjacent
+  {sym:'COIN', name:'COINBASE'},
+  {sym:'MSTR', name:'MICROSTRATEGY'},
+  {sym:'HOOD', name:'ROBINHOOD'},
+  // Index
+  {sym:'SPY', name:'S&P 500 ETF'},
+];
+
+let charts = {};
+let modalChart = null;
+let activeTab = 'crypto';
+let activeSignal = 'all';
+let allAssetData = [];
+
+const COLORS = {
+  BTC:'#f7931a',ETH:'#627eea',BNB:'#f3ba2f',SOL:'#9945ff',XRP:'#00aae4',
+  DOGE:'#c3a634',ADA:'#0033ad',AVAX:'#e84142',LINK:'#375bd2',DOT:'#e6007a',
+  NEAR:'#00c08b',UNI:'#ff007a',SHIB:'#e01a2c',LTC:'#bfbbbb',TRX:'#eb0029',
+  ATOM:'#2e3148',XLM:'#14b6e7',AAVE:'#b6509e',OP:'#ff0420',ARB:'#12aaff',
+  APT:'#0fa37f',INJ:'#00bcff',ICP:'#29abe2',TON:'#0098ea',GRT:'#6f4cff',
+  RENDER:'#e03fff',STX:'#5546ff',FIL:'#0090ff',SUI:'#4da2ff',
+  XAU:'#ffc947',XAG:'#b0c4d8'
+};
+
+// ── UTILS ────────────────────────────────────────────────────
+function fmtPrice(p) {
+  if (!p && p!==0) return '$—';
+  if (p>=1000) return '$'+p.toLocaleString('en-US',{maximumFractionDigits:0});
+  if (p>=1)    return '$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
+  if (p>=0.001)return '$'+p.toFixed(5);
+  return '$'+p.toFixed(8);
+}
+
+function fmtDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+function fetchWithTimeout(url, ms=20000) {
+  const ctrl = new AbortController();
+  const id = setTimeout(()=>ctrl.abort(), ms);
+  return fetch(url, {signal:ctrl.signal}).finally(()=>clearTimeout(id));
+}
+
+// Retry fetch up to 2 times with delay on failure
+async function fetchWithRetry(url, ms=20000, retries=2) {
+  for(let i=0;i<=retries;i++){
+    try{
+      const r = await fetchWithTimeout(url, ms);
+      if(r.ok) return r;
+      if(i<retries) await new Promise(r=>setTimeout(r,1500));
+    }catch(e){
+      if(i<retries) await new Promise(r=>setTimeout(r,1500));
+      else throw e;
+    }
+  }
+}
+
+// ── INDICATORS ───────────────────────────────────────────────
+function calcRSI(prices, period=14) {
+  if (!prices||prices.length<period+1) return null;
+  let g=0,l=0;
+  for (let i=prices.length-period;i<prices.length;i++) {
+    const d=prices[i]-prices[i-1];
+    if(d>0)g+=d;else l-=d;
+  }
+  const ag=g/period,al=l/period;
+  if(al===0)return 100;
+  return 100-(100/(1+(ag/al)));
+}
+function calcSMA(prices,n) {
+  if(!prices||prices.length<n)return null;
+  return prices.slice(-n).reduce((a,b)=>a+b,0)/n;
+}
+function fakeSparkline(price,chg24) {
+  const pts=60; let p=price/(1+chg24/100); const out=[];
+  for(let i=0;i<pts;i++){const n=(Math.random()-.5)*p*0.014;p=p+(chg24/100)*p*(1/pts)*0.8+n;out.push(Math.max(p,0.000001));}
+  out[out.length-1]=price; return out;
+}
+function getSignal(rsi,price,sma20,sma50,chg24) {
+  let score=0,reasons=[];
+  if(rsi!==null){
+    if(rsi<30){score+=3;reasons.push('RSI oversold');}
+    else if(rsi<42){score+=1;reasons.push('RSI low');}
+    else if(rsi>72){score-=3;reasons.push('RSI overbought');}
+    else if(rsi>62){score-=1;reasons.push('RSI elevated');}
+  }
+  if(sma20&&sma50){
+    if(price>sma20&&sma20>sma50){score+=1;reasons.push('Bullish MA stack');}
+    if(price<sma20&&sma20<sma50){score-=1;reasons.push('Bearish MA stack');}
+    if(price<sma20*0.95){score+=1;reasons.push('Dip below MA20');}
+    if(price>sma20*1.08){score-=1;reasons.push('Extended above MA20');}
+  }
+  if(chg24<-8){score+=1;reasons.push('Large dip today');}
+  if(chg24>12){score-=1;reasons.push('Large pump today');}
+  let signal='HOLD';
+  if(score>=3)signal='BUY';
+  else if(score<=-2)signal='SELL';
+  
+  return{signal,reason:reasons[0]||'Monitoring'};
+}
+
+// ── CHART MODAL ──────────────────────────────────────────────
+async function openChart(asset) {
+  document.getElementById('chartModal').classList.add('open');
+  document.getElementById('modalTitle').textContent=asset.name;
+  document.getElementById('modalSym').textContent=asset.symbol;
+  document.getElementById('modalPrice').textContent=fmtPrice(asset.price);
+  const chgEl=document.getElementById('modalChg');
+  chgEl.textContent=(asset.chg24>=0?'▲ +':'▼ ')+asset.chg24.toFixed(2)+'%';
+  chgEl.style.color=asset.chg24>=0?'var(--green)':'var(--red)';
+  document.getElementById('modalHover').textContent=
+    (currentTimeframe==='1M'||currentTimeframe==='1Y')?
+    `LOADING ${currentTimeframe} DATA...`:'HOVER OR TAP CHART FOR PRICE AT THAT TIME';
+
+  // Fetch extended data if 1M/1Y, otherwise use stored spark
+  let spark = asset.spark&&asset.spark.length>5 ? asset.spark : fakeSparkline(asset.price,asset.chg24);
+  if(currentTimeframe==='1M'||currentTimeframe==='1Y'){
+    const extended = await fetchExtendedSparkline(asset);
+    if(extended&&extended.length>5) spark=extended;
+  }
+
+  const rsi=calcRSI(spark),sma20=calcSMA(spark,Math.min(20,spark.length)),sma50=calcSMA(spark,Math.min(50,spark.length));
+  const {signal,reason}=getSignal(rsi,asset.price,sma20,sma50,asset.chg24);
+
+  const rsiCol=rsi===null?'var(--muted)':rsi<35?'var(--green)':rsi>70?'var(--red)':'var(--gold)';
+  const rsiLbl=rsi===null?'—':rsi<35?'OVERSOLD':rsi>70?'OVERBOUGHT':rsi>55?'ELEVATED':'NEUTRAL';
+  document.getElementById('modalInds').innerHTML=`
+    <div class="modal-ind"><div class="ilabel">RSI (14)</div><div class="ival" style="color:${rsiCol}">${rsi!==null?rsi.toFixed(1):'—'}</div><div class="isig" style="color:${rsiCol}">${rsiLbl}</div></div>
+    <div class="modal-ind"><div class="ilabel">24H CHANGE</div><div class="ival" style="color:${asset.chg24>=0?'var(--green)':'var(--red)'}">${asset.chg24>=0?'+':''}${asset.chg24.toFixed(2)}%</div></div>
+    <div class="modal-ind"><div class="ilabel">MA20</div><div class="ival" style="color:${sma20&&asset.price>sma20?'var(--green)':'var(--red)'}">${fmtPrice(sma20)}</div><div class="isig">${sma20?(asset.price>sma20?'PRICE ABOVE':'PRICE BELOW'):''}</div></div>
+    <div class="modal-ind"><div class="ilabel">MA50</div><div class="ival" style="color:${sma50&&asset.price>sma50?'var(--green)':'var(--red)'}">${fmtPrice(sma50)}</div><div class="isig">${sma50?(asset.price>sma50?'PRICE ABOVE':'PRICE BELOW'):''}</div></div>
+    <div class="modal-ind" style="grid-column:span 2"><div class="ilabel">SIGNAL</div><div class="ival" style="color:${signal==='BUY'?'var(--green)':signal==='SELL'?'var(--red)':'var(--muted)'}">${signal}</div><div class="isig" style="color:var(--muted)">${reason}</div></div>
+  `;
+
+  // Build time labels based on timeframe
+  const now=Date.now();
+  const msPerPoint = currentTimeframe==='1H'?300000 : // 5min
+    currentTimeframe==='1D'?3600000 : // 1hr
+    currentTimeframe==='1W'?3600000 : // 1hr
+    currentTimeframe==='1M'?86400000 : // 1day
+    604800000; // 1week for 1Y
+  const labels=spark.map((_,i)=>now-(spark.length-1-i)*msPerPoint);
+
+  document.getElementById('modalHover').textContent='HOVER OR TAP CHART FOR PRICE AT THAT TIME';
+  document.getElementById('modalHover').style.color='var(--muted)';
+
+  setTimeout(()=>{
+    const ctx=document.getElementById('modalCanvas').getContext('2d');
+    if(modalChart)modalChart.destroy();
+    const isUp=spark[spark.length-1]>=spark[0];
+    const lc=isUp?'#00ff88':'#ff3d5a';
+
+    modalChart=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          data:spark,borderColor:lc,borderWidth:2,pointRadius:0,
+          pointHoverRadius:6,pointHoverBackgroundColor:lc,pointHoverBorderColor:'#fff',
+          fill:true,tension:0.3,
+          backgroundColor:c=>{const g=c.chart.ctx.createLinearGradient(0,0,0,300);g.addColorStop(0,isUp?'rgba(0,255,136,.2)':'rgba(255,61,90,.2)');g.addColorStop(1,'rgba(0,0,0,0)');return g;}
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            enabled:false,
+            external:(ctx)=>{
+              const el=document.getElementById('modalHover');
+              if(!el)return;
+              if(ctx.tooltip.opacity===0){el.textContent='HOVER OR TAP CHART FOR PRICE AT THAT TIME';el.style.color='var(--muted)';return;}
+              const dp=ctx.tooltip.dataPoints?.[0];
+              if(dp){el.textContent=fmtDate(labels[dp.dataIndex])+'   ·   '+fmtPrice(dp.raw);el.style.color='var(--accent)';}
+            }
+          }
+        },
+        scales:{
+          x:{display:true,grid:{color:'rgba(30,45,61,.4)'},ticks:{color:'#4a6278',font:{family:'Space Mono',size:8},maxTicksLimit:7,callback:(_,i,arr)=>{if(i===0||i===arr.length-1||i===Math.floor(arr.length/2)){return fmtDate(labels[i]).split(' ').slice(0,2).join(' ');}return '';}}},
+          y:{display:true,position:'right',grid:{color:'rgba(30,45,61,.4)'},ticks:{color:'#4a6278',font:{family:'Space Mono',size:8},callback:v=>fmtPrice(v)}}
+        }
+      }
+    });
+  },50);
+}
+
+function closeChart() {
+  document.getElementById('chartModal').classList.remove('open');
+  if(modalChart){modalChart.destroy();modalChart=null;}
+}
+
+// ── MARKET STATUS ────────────────────────────────────────────
+function updateMarketStatus() {
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US', {timeZone:'America/New_York'}));
+  const day = et.getDay(); // 0=Sun, 6=Sat
+  const hour = et.getHours();
+  const min = et.getMinutes();
+  const timeNum = hour * 100 + min;
+  const isWeekday = day >= 1 && day <= 5;
+  const isMarketHours = timeNum >= 930 && timeNum < 1600;
+  const isOpen = isWeekday && isMarketHours;
+
+  ['nyseStatus','nasdaqStatus'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const name = i === 0 ? 'NYSE' : 'NASDAQ';
+    el.className = `mkt-stat ${isOpen ? 'mkt-open' : 'mkt-closed'}`;
+    el.innerHTML = `<div class="mkt-dot"></div><span class="mkt-label">${name}: ${isOpen ? 'OPEN' : 'CLOSED'}</span>`;
+  });
+}
+
+// ── FINNHUB STOCK FETCHER ─────────────────────────────────────
+async function fetchStockQuote(sym) {
+  const r = await fetchWithTimeout(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_KEY}`, 8000);
+  if (!r.ok) throw new Error('Finnhub ' + r.status);
+  const d = await r.json();
+  if (!d.c || d.c === 0) throw new Error('No data for ' + sym);
+  return d;
+}
+
+async function fetchStockCandles(sym) {
+  // Always fetch 7D hourly on load — timeframe applied client-side for 1H/1D/1W
+  // Extended data (1M/1Y) fetched lazily when modal opens
+  const to = Math.floor(Date.now() / 1000);
+  const from = to - (7 * 24 * 60 * 60);
+  const r = await fetchWithTimeout(`https://finnhub.io/api/v1/stock/candle?symbol=${sym}&resolution=60&from=${from}&to=${to}&token=${FINNHUB_KEY}`, 8000);
+  if (!r.ok) return [];
+  const d = await r.json();
+  if (d.s !== 'ok' || !d.c) return [];
+  return d.c;
+}
+
+async function fetchAllStocks() {
+  const results = [];
+  // Only fetch stocks that are in the watchlist
+  const selectedStocks = STOCKS.filter(s => isVisible(s.sym));
+  for (const stock of selectedStocks) {
+    try {
+      const quote = await fetchStockQuote(stock.sym);
+      // Fetch candles with small delay to respect rate limits
+      await new Promise(r => setTimeout(r, 120));
+      const candles = await fetchStockCandles(stock.sym);
+      await new Promise(r => setTimeout(r, 120));
+      const spark7d = candles.length > 5 ? candles : fakeSparkline(quote.c, quote.dp || 0);
+      const spark = sliceSparkForTimeframe(spark7d, currentTimeframe);
+      results.push({
+        symbol: stock.sym,
+        name: stock.name,
+        price: quote.c,
+        chg24: quote.dp || 0,
+        spark,
+        spark7d,
+        type: 'stocks',
+        color: '#a855f7',
+        prevClose: quote.pc,
+        high: quote.h,
+        low: quote.l,
+      });
+    } catch(e) {
+      console.warn(`${stock.sym} failed:`, e.message);
+    }
+  }
+  return results;
+}
+
+// ── CRYPTO NEWS ───────────────────────────────────────────────
+async function openCryptoNews() {
+  document.getElementById('cryptoNewsModal').classList.add('open');
+  document.getElementById('cryptoNewsFeed').innerHTML='<div class="news-loading">FETCHING CRYPTO NEWS...</div>';
+  const sources=[
+    {name:'COINDESK', url:'https://www.coindesk.com/arc/outboundfeeds/rss/'},
+    {name:'COINTELEGRAPH', url:'https://cointelegraph.com/rss'},
+  ];
+  const proxy='https://api.rss2json.com/v1/api.json?rss_url=';
+  let allItems=[];
+  for(const src of sources){
+    try{
+      const r=await fetchWithTimeout(`${proxy}${encodeURIComponent(src.url)}`,8000);
+      if(r.ok){const d=await r.json();if(d.items)allItems=[...allItems,...d.items.slice(0,8).map(i=>({...i,source:src.name}))]}
+    }catch(e){console.warn(src.name+' failed:',e.message);}
+  }
+  if(!allItems.length){
+    document.getElementById('cryptoNewsFeed').innerHTML=`<div class="news-err">⚠ UNAVAILABLE<br><br><a href="https://coindesk.com" target="_blank" style="color:var(--accent)">coindesk.com</a> &nbsp;|&nbsp; <a href="https://cointelegraph.com" target="_blank" style="color:var(--accent)">cointelegraph.com</a></div>`;
+    return;
+  }
+  allItems.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
+  document.getElementById('cryptoNewsFeed').innerHTML=allItems.map(item=>`
+    <div class="news-item" onclick="window.open('${item.link}','_blank')">
+      <div class="news-source">${item.source}</div>
+      <div class="news-headline">${item.title}</div>
+      <div class="news-date">${fmtDate(item.pubDate)}</div>
+    </div>`).join('');
+}
+function closeCryptoNews(){document.getElementById('cryptoNewsModal').classList.remove('open');}
+
+// ── STOCK NEWS ────────────────────────────────────────────────
+async function openStockNews() {
+  document.getElementById('stockNewsModal').classList.add('open');
+  document.getElementById('stockNewsFeed').innerHTML='<div class="news-loading">FETCHING MARKET NEWS...</div>';
+  const sources=[
+    {name:'SEEKING ALPHA', url:'https://seekingalpha.com/feed.xml'},
+    {name:'MARKETWATCH', url:'https://feeds.marketwatch.com/marketwatch/topstories/'},
+  ];
+  const proxy='https://api.rss2json.com/v1/api.json?rss_url=';
+  let allItems=[];
+  for(const src of sources){
+    try{
+      const r=await fetchWithTimeout(`${proxy}${encodeURIComponent(src.url)}`,8000);
+      if(r.ok){const d=await r.json();if(d.items)allItems=[...allItems,...d.items.slice(0,8).map(i=>({...i,source:src.name}))]}
+    }catch(e){console.warn(src.name+' failed:',e.message);}
+  }
+  if(!allItems.length){
+    document.getElementById('stockNewsFeed').innerHTML=`<div class="news-err">⚠ UNAVAILABLE<br><br><a href="https://marketwatch.com" target="_blank" style="color:#d4aaff">marketwatch.com</a> &nbsp;|&nbsp; <a href="https://finance.yahoo.com" target="_blank" style="color:#d4aaff">finance.yahoo.com</a></div>`;
+    return;
+  }
+  allItems.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
+  document.getElementById('stockNewsFeed').innerHTML=allItems.map(item=>`
+    <div class="news-item" onclick="window.open('${item.link}','_blank')">
+      <div class="news-source" style="color:#d4aaff">${item.source}</div>
+      <div class="news-headline">${item.title}</div>
+      <div class="news-date">${fmtDate(item.pubDate)}</div>
+    </div>`).join('');
+}
+function closeStockNews(){document.getElementById('stockNewsModal').classList.remove('open');}
+
+// Close modals on bg click
+document.getElementById('chartModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeChart();});
+document.getElementById('cryptoNewsModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCryptoNews();});
+document.getElementById('stockNewsModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeStockNews();});
+document.getElementById('qrModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeQR();});
+
+// ── SEARCH ──────────────────────────────────────────────────
+function doSearch(val) {
+  const clearBtn=document.getElementById('searchClear');
+  clearBtn.style.display=val.trim()?'block':'none';
+  applyFilters();
+}
+
+function clearSearch(){
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchClear').style.display='none';
+  applyFilters();
+}
+
+// ── FILTERS ──────────────────────────────────────────────────
+function applyFilters() {
+  const q=(document.getElementById('searchInput').value||'').trim().toLowerCase();
+  let firstMatch=null;
+  let anyVisible=false;
+
+  ['metalsGrid','cryptoGrid','stocksGrid'].forEach(gridId=>{
+    document.querySelectorAll(`#${gridId} .card`).forEach(card=>{
+      card.classList.remove('highlighted');
+      const typeMatch=activeTab==='all'||card.dataset.type===activeTab;
+      const sigMatch=activeSignal==='all'||card.dataset.signal.toLowerCase()===activeSignal;
+      const nameMatch=!q||(card.dataset.name||'').includes(q)||(card.dataset.sym||'').includes(q);
+      const show=typeMatch&&sigMatch&&nameMatch;
+      card.style.display=show?'':'none';
+      if(show){
+        anyVisible=true;
+        if(nameMatch&&q){card.classList.add('highlighted');if(!firstMatch)firstMatch=card;}
+      }
+    });
+  });
+
+  // Section labels
+  const sections={metals:'metalsLabel',crypto:'cryptoLabel',stocks:'stocksLabel'};
+  Object.entries(sections).forEach(([sec,labelId])=>{
+    const el=document.getElementById(labelId);
+    if(!el)return;
+    el.style.display=(activeTab==='all'||activeTab===sec)?'':'none';
+  });
+
+  // Empty message
+  const emptyMsg=document.getElementById('emptyMsg');
+  if(emptyMsg) emptyMsg.style.display=anyVisible?'none':'block';
+
+  if(q&&firstMatch)setTimeout(()=>firstMatch.scrollIntoView({behavior:'smooth',block:'center'}),100);
+}
+
+function switchTab(tab,el){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function filterSignal(sig,el){
+  activeSignal=sig;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active-buy','active-sell','active-hold'));
+  if(sig!=='all')el.classList.add(`active-${sig}`);
+  applyFilters();
+}
+
+
+// ── WATCHLIST STATE ──────────────────────────────────────────
+const WATCHLIST_KEY = 'moontick_watchlist_v1';
+const TIMEFRAME_KEY = 'moontick_timeframe_v1';
+const APP_URL = 'https://brandontx1.github.io/Crypto-Tracker/';
+let watchlist = {};
+
+// Master lists for settings UI — independent of what's loaded
+const METALS_MASTER = [
+  {symbol:'XAU', name:'GOLD'},
+  {symbol:'XAG', name:'SILVER'},
+];
+
+const STOCKS_MASTER = [
+  {symbol:'AAPL',name:'APPLE'},{symbol:'MSFT',name:'MICROSOFT'},
+  {symbol:'NVDA',name:'NVIDIA'},{symbol:'GOOGL',name:'GOOGLE'},
+  {symbol:'AMZN',name:'AMAZON'},{symbol:'META',name:'META'},
+  {symbol:'TSLA',name:'TESLA'},{symbol:'AMD',name:'AMD'},
+  {symbol:'NFLX',name:'NETFLIX'},{symbol:'ORCL',name:'ORACLE'},
+  {symbol:'JPM',name:'JPMORGAN'},{symbol:'BAC',name:'BANK OF AMERICA'},
+  {symbol:'V',name:'VISA'},{symbol:'MA',name:'MASTERCARD'},
+  {symbol:'GS',name:'GOLDMAN SACHS'},{symbol:'XOM',name:'EXXON'},
+  {symbol:'CVX',name:'CHEVRON'},{symbol:'CAT',name:'CATERPILLAR'},
+  {symbol:'BA',name:'BOEING'},{symbol:'JNJ',name:'J&J'},
+  {symbol:'UNH',name:'UNITEDHEALTH'},{symbol:'PFE',name:'PFIZER'},
+  {symbol:'COIN',name:'COINBASE'},{symbol:'MSTR',name:'MICROSTRATEGY'},
+  {symbol:'HOOD',name:'ROBINHOOD'},{symbol:'SPY',name:'S&P 500 ETF'},
+];
+
+// Crypto master list is dynamic — populated after first CoinGecko load
+let cryptoMaster = [];
+
+function loadWatchlist() {
+  try {
+    const saved = localStorage.getItem(WATCHLIST_KEY);
+    if (saved) watchlist = JSON.parse(saved);
+  } catch(e) { watchlist = {}; }
+}
+
+function saveWatchlist() {
+  try { localStorage.setItem(WATCHLIST_KEY, JSON.stringify(watchlist)); } catch(e) {}
+}
+
+// An asset is visible if it has never been set (default ON) or explicitly set true
+function isVisible(symbol) {
+  return watchlist[symbol] !== false;
+}
+
+function initTimeframe() {
+  try {
+    const saved = localStorage.getItem(TIMEFRAME_KEY);
+    if (saved) { currentTimeframe = saved; pendingTimeframe = saved; }
+  } catch(e) {}
+}
+
+// ── WATCHLIST UI ─────────────────────────────────────────────
+function toggleWatchSection(section) {
+  const items = document.getElementById('wi-'+section);
+  const arrow = document.getElementById('wa-'+section);
+  if (!items) return;
+  if(items.classList.contains('collapsed')) {
+    items.classList.remove('collapsed');
+    if(arrow) arrow.textContent = '▼';
+  } else {
+    items.classList.add('collapsed');
+    if(arrow) arrow.textContent = '▶';
+  }
+}
+
+function selectAllSection(section, selectAll) {
+  const items = document.querySelectorAll('#wi-'+section+' .watch-item');
+  items.forEach(item => {
+    const sym = item.dataset.sym;
+    if(selectAll) {
+      item.classList.add('selected');
+      watchlist[sym] = true;
+    } else {
+      item.classList.remove('selected');
+      watchlist[sym] = false;
+    }
+  });
+  updateWatchCount(section);
+}
+
+function buildWatchlistUI() {
+  // Use master lists so settings always shows ALL possible assets
+  const masterLists = {
+    metals: METALS_MASTER,
+    stocks: STOCKS_MASTER,
+    crypto: cryptoMaster.length > 0 ? cryptoMaster : 
+            allAssetData.filter(a=>a.type==='crypto').map(a=>({symbol:a.symbol,name:a.name}))
+  };
+
+  ['metals','crypto','stocks'].forEach(section => {
+    const container = document.getElementById('wi-'+section);
+    if(!container) return;
+    container.innerHTML = '';
+
+    const assets = masterLists[section] || [];
+
+    // Add SELECT ALL / NONE buttons at top of each section
+    const controls = document.createElement('div');
+    controls.style.cssText = 'display:flex;gap:6px;padding:6px 8px 2px;';
+    controls.innerHTML = `
+      <button onclick="selectAllSection('${section}', true)" style="flex:1;padding:5px;background:#0a2030;border:1px solid var(--accent);color:#e0f8ff;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;border-radius:4px;">✓ ALL</button>
+      <button onclick="selectAllSection('${section}', false)" style="flex:1;padding:5px;background:#1a0808;border:1px solid var(--red);color:#ffaaaa;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;border-radius:4px;">✕ NONE</button>
+    `;
+    container.appendChild(controls);
+
+    assets.forEach(asset => {
+      const selected = isVisible(asset.symbol);
+      const item = document.createElement('div');
+      item.className = 'watch-item' + (selected ? ' selected' : '');
+      item.dataset.sym = asset.symbol;
+      item.dataset.section = section;
+      const shortName = asset.name.length > 11 ? asset.name.substring(0,11)+'…' : asset.name;
+      item.innerHTML = `
+        <div class="watch-checkbox"><span class="watch-checkbox-tick">✓</span></div>
+        <div style="overflow:hidden;min-width:0">
+          <div class="watch-item-name">${shortName}</div>
+          <div class="watch-item-sym">${asset.symbol}</div>
+        </div>
+      `;
+      item.addEventListener('click', () => {
+        item.classList.toggle('selected');
+        watchlist[asset.symbol] = item.classList.contains('selected');
+        updateWatchCount(section);
+      });
+      container.appendChild(item);
+    });
+    updateWatchCount(section);
+  });
+}
+
+function updateWatchCount(section) {
+  const all = document.querySelectorAll('#wi-'+section+' .watch-item').length;
+  const sel = document.querySelectorAll('#wi-'+section+' .watch-item.selected').length;
+  const el = document.getElementById('wc-'+section);
+  if(el) el.textContent = sel+'/'+all;
+}
+
+// ── QR CODE ───────────────────────────────────────────────────
+let qrGenerated = false;
+function openQR() {
+  document.getElementById('qrModal').classList.add('open');
+  if(!qrGenerated && typeof QRCode !== 'undefined') {
+    new QRCode(document.getElementById('qrcode'), {
+      text: APP_URL, width: 200, height: 200,
+      colorDark: '#ffffff', colorLight: '#0c1520',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    qrGenerated = true;
+  }
+}
+function closeQR() { document.getElementById('qrModal').classList.remove('open'); }
+
+// ── ROCKET LAUNCH ─────────────────────────────────────────────
+function launchRocket() {
+  const rocket = document.getElementById('heroRocket');
+  if(!rocket) return;
+  rocket.style.animation = 'rocketLaunch 1.1s cubic-bezier(0.4,0,0.2,1) 0.15s forwards';
+  setTimeout(()=>{
+    const headerMoon = document.getElementById('headerMoonImg');
+    if(headerMoon){
+      headerMoon.style.filter='brightness(2.2) drop-shadow(0 0 14px #ffc947)';
+      setTimeout(()=>{headerMoon.style.filter='';},500);
+    }
+  }, 1250);
+}
+
+// ── SETTINGS & TIMEFRAME ─────────────────────────────────────
+let currentTimeframe = '1D';
+let pendingTimeframe = '1D';
+
+// Each asset stores its full 7D spark as spark7d, and current display spark as spark
+function sliceSparkForTimeframe(spark7d, tf) {
+  if (!spark7d || !spark7d.length) return spark7d;
+  if (tf==='1H') return spark7d.slice(-12);
+  if (tf==='1D') return spark7d.slice(-24);
+  return spark7d; // 1W, 1M, 1Y all use full 7D on cards
+}
+
+function openSettings(){
+  pendingTimeframe = currentTimeframe;
+  document.querySelectorAll('.tf-btn').forEach(b=>{
+    b.classList.toggle('active', b.textContent.trim()===currentTimeframe);
+  });
+  buildWatchlistUI();
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
+// Note: settingsModal is full-screen, no backdrop click needed
+
+function setTimeframe(tf, el){
+  pendingTimeframe = tf;
+  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function applySettings(){
+  currentTimeframe = pendingTimeframe;
+  try { localStorage.setItem(TIMEFRAME_KEY, currentTimeframe); } catch(e) {}
+  saveWatchlist();
+  closeSettings();
+  await loadAll();
+}
+// Keep old name for any references
+async function applyTimeframe(){ await applySettings(); }
+
+// Fetch extended data for modal (1M/1Y only)
+async function fetchExtendedSparkline(asset){
+  if(currentTimeframe==='1H'||currentTimeframe==='1D'||currentTimeframe==='1W'){
+    return asset.spark; // already correct
+  }
+  // 1M or 1Y — fetch fresh
+  if(asset.type==='stocks'){
+    try{
+      const {resolution,from}=getFinnhubParams(currentTimeframe);
+      const to=Math.floor(Date.now()/1000);
+      const r=await fetchWithTimeout(`https://finnhub.io/api/v1/stock/candle?symbol=${asset.symbol}&resolution=${resolution}&from=${from}&to=${to}&token=${FINNHUB_KEY}`,8000);
+      if(r.ok){const d=await r.json();if(d.s==='ok'&&d.c&&d.c.length>5)return d.c;}
+    }catch(e){console.warn('Extended stock data:',e.message);}
+  } else if(asset.coinId){
+    try{
+      const days=currentTimeframe==='1M'?'30':'365';
+      const r=await fetchWithTimeout(`https://api.coingecko.com/api/v3/coins/${asset.coinId}/market_chart?vs_currency=usd&days=${days}&interval=daily`,8000);
+      if(r.ok){const d=await r.json();if(d.prices&&d.prices.length>5)return d.prices.map(p=>p[1]);}
+    }catch(e){console.warn('Extended crypto data:',e.message);}
+  }
+  return asset.spark; // fallback to 7D
+}
+
+// CoinGecko timeframe params
+function getCoinGeckoDays(tf){
+  const map={'1H':'1','1D':'1','1W':'7','1M':'30','1Y':'365'};
+  return map[tf]||'7';
+}
+
+// Finnhub candle resolution + from timestamp
+function getFinnhubParams(tf){
+  const now=Math.floor(Date.now()/1000);
+  const map={
+    '1H':{resolution:'5', from:now-3600},
+    '1D':{resolution:'60', from:now-86400},
+    '1W':{resolution:'60', from:now-604800},
+    '1M':{resolution:'D', from:now-2592000},
+    '1Y':{resolution:'W', from:now-31536000},
+  };
+  return map[tf]||map['1D'];
+}
+
+// ── API FETCHERS ─────────────────────────────────────────────
+async function fetchMetals() {
+  const metals=[];
+  try {
+    const r=await fetchWithTimeout('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=pax-gold&sparkline=true&price_change_percentage=24h');
+    if(r.ok){
+      const d=await r.json();
+      const g=d.find(c=>c.id==='pax-gold');
+      if(g&&g.current_price>1000&&g.current_price<15000){
+        const spark7d=g.sparkline_in_7d?.price||[];
+        metals.push({symbol:'XAU',name:'GOLD',price:g.current_price,chg24:g.price_change_percentage_24h||0,spark:sliceSparkForTimeframe(spark7d,currentTimeframe),spark7d,coinId:'pax-gold',type:'metals',color:'#ffc947'});
+      }
+    }
+  } catch(e){console.warn('Gold:',e.message);}
+  try {
+    const r=await fetchWithTimeout('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=kinesis-silver&sparkline=true&price_change_percentage=24h');
+    if(r.ok){
+      const d=await r.json();
+      const s=d.find(c=>c.id==='kinesis-silver');
+      if(s&&s.current_price>20){
+        const spark7d=s.sparkline_in_7d?.price||[];
+        metals.push({symbol:'XAG',name:'SILVER',price:s.current_price,chg24:s.price_change_percentage_24h||0,spark:sliceSparkForTimeframe(spark7d,currentTimeframe),spark7d,coinId:'kinesis-silver',type:'metals',color:'#b0c4d8'});
+      }
+    }
+  } catch(e){console.warn('Silver:',e.message);}
+  return metals;
+}
+
+async function tryCoingecko() {
+  // Comprehensive blocklist of stablecoins, exchange tokens, institutional funds, and junk
+  const BLOCK_SYMS = new Set([
+    // Stablecoins
+    'usdt','usdc','dai','busd','tusd','usdp','usdd','frax','lusd','gusd','usde','fdusd',
+    'pyusd','eurc','usds','susd','xusd','eurs','ousd','dola','mim','alusd','usdc.e',
+    'usd1','usdf','usdg','rlusd','usyc','usdc.e','usd+','cusd','husd','zusd','musd',
+    // Gold/metals tokens (we handle these separately)
+    'xaut','paxg',
+    // Exchange/platform tokens that aren't real crypto investments
+    'leo','wbt','buidl','ht',
+    // Other known junk
+    'bttc','luna','ustc','figr_heloc','figr','wlfi','cc','rain','m','sky','aster','htx'
+  ]);
+
+  const BLOCK_NAME_FRAGMENTS = [
+    'wrapped','staked','bridged','tether gold','pax gold',
+    'usd coin','usd dollar','dollar','institutional','liquidity fund',
+    'yield','money market','treasury','t-bill','tokenized',
+    'heloc','world liberty','memecore','whitebit','falcon'
+  ];
+
+  const r = await fetchWithRetry('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1&sparkline=true&price_change_percentage=24h');
+  if(!r) throw new Error('CoinGecko unavailable');
+  if(!r.ok) throw new Error('CoinGecko '+r.status);
+  const data = await r.json();
+
+  const filtered = data.filter(c => {
+    const sym = c.symbol.toLowerCase();
+    const name = c.name.toLowerCase();
+    const price = c.current_price || 0;
+    const vol = c.total_volume || 0;
+
+    // Block known bad symbols
+    if (BLOCK_SYMS.has(sym)) return false;
+
+    // Block by name fragments
+    if (BLOCK_NAME_FRAGMENTS.some(f => name.includes(f))) return false;
+
+    // Block stablecoins by price ($0.95 - $1.05 range with near-zero change)
+    if (price >= 0.94 && price <= 1.06 && Math.abs(c.price_change_percentage_24h||0) < 0.5) return false;
+
+    // Block micro-caps with very low volume (under $2M/day — not worth tracking)
+    if (vol < 2000000) return false;
+
+    // Block symbols that start with 'usd' or end with 'usd'
+    if (sym.startsWith('usd') || sym.endsWith('usd')) return false;
+
+    return true;
+  }).slice(0, 50);
+
+  return filtered.map(c => {
+    const spark7d = c.sparkline_in_7d?.price || [];
+    const spark = sliceSparkForTimeframe(spark7d, currentTimeframe);
+    return {
+      symbol: c.symbol.toUpperCase(),
+      name: c.name.toUpperCase(),
+      price: c.current_price,
+      chg24: c.price_change_percentage_24h || 0,
+      spark, spark7d, coinId: c.id, type: 'crypto',
+      color: COLORS[c.symbol.toUpperCase()] || '#00e5ff'
+    };
+  });
+}
+
+// Called after CoinGecko load to update master list for settings
+function updateCryptoMaster(assets) {
+  if(assets && assets.length > 0) {
+    cryptoMaster = assets.map(a => ({symbol: a.symbol, name: a.name}));
+  }
+}
+
+async function tryCoincap() {
+  const r=await fetchWithTimeout('https://api.coincap.io/v2/assets?limit=50');
+  if(!r.ok)throw new Error('CoinCap '+r.status);
+  const json=await r.json();
+  return(json.data||[]).map(c=>{const sym=c.symbol.toUpperCase();return{symbol:sym,name:c.name.toUpperCase(),price:parseFloat(c.priceUsd)||0,chg24:parseFloat(c.changePercent24Hr)||0,spark:[],spark7d:[],type:'crypto',color:COLORS[sym]||'#00e5ff'};});
+}
+
+// ── RENDER CARD ──────────────────────────────────────────────
+function renderCard(asset,idx) {
+  // Skip entirely if not in watchlist — don't render hidden assets
+  if(!isVisible(asset.symbol)) return null;
+
+  if(asset.unavailable){
+    const card=document.createElement('div');
+    card.className='card';card.dataset.type=asset.type;card.dataset.signal='HOLD';
+    card.dataset.name=asset.name.toLowerCase();card.dataset.sym=asset.symbol.toLowerCase();
+    card.style.cssText=`--ca:${asset.color};animation-delay:${idx*0.035}s`;
+    card.innerHTML=`<div class="card-top"><div><div class="aname">${asset.name}</div><div class="asym">${asset.symbol}</div></div><div class="pblock"><div class="price" style="color:var(--muted)">N/A</div></div></div><div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);padding:16px 0;text-align:center;letter-spacing:1px">PRICE UNAVAILABLE</div>`;
+    const gridId = asset.type==='metals'?'metalsGrid':asset.type==='stocks'?'stocksGrid':'cryptoGrid';
+    document.getElementById(gridId).appendChild(card);
+    return null;
+  }
+
+  const spark=asset.spark&&asset.spark.length>10?asset.spark:fakeSparkline(asset.price,asset.chg24);
+  const rsi=calcRSI(spark),sma20=calcSMA(spark,Math.min(20,spark.length)),sma50=calcSMA(spark,Math.min(50,spark.length));
+  const{signal,reason}=getSignal(rsi,asset.price,sma20,sma50,asset.chg24);
+  const rsiCol=rsi===null?'var(--muted)':rsi<35?'var(--green)':rsi>70?'var(--red)':rsi>55?'var(--gold)':'var(--text)';
+  const rsiLbl=rsi===null?'—':rsi<35?'OVERSOLD':rsi>70?'OVERBOUGHT':rsi>55?'ELEVATED':rsi<45?'LOW':'NEUTRAL';
+  const ma20s=sma20?(asset.price>sma20?'above':'below'):'';
+  const ma50s=sma50?(asset.price>sma50?'above':'below'):'';
+
+  const card=document.createElement('div');
+  card.className='card';card.dataset.type=asset.type;card.dataset.signal=signal;
+  card.dataset.name=asset.name.toLowerCase();card.dataset.sym=asset.symbol.toLowerCase();
+  const cardColor = asset.type==='stocks' ? '#a855f7' : asset.color;
+  card.style.cssText=`--ca:${cardColor};animation-delay:${idx*0.035}s`;
+
+  // Check if market is closed for stocks
+  const now=new Date();
+  const et=new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const day=et.getDay(),hour=et.getHours(),min=et.getMinutes();
+  const timeNum=hour*100+min;
+  const marketOpen=day>=1&&day<=5&&timeNum>=930&&timeNum<1600;
+  const stockNote=asset.type==='stocks'&&!marketOpen?`<div class="market-note">🕐 AS OF MARKET CLOSE · ${day===5&&timeNum>=1600||day===6||day===0?'OPENS MON':'OPENS TODAY'} 9:30AM ET</div>`:'';
+  const stockBadge=asset.type==='stocks'?'<div class="stock-badge">📈 STOCK</div>':''  ;
+
+  card.innerHTML=`
+    <div class="card-top">
+      <div><div class="aname">${asset.name}</div><div class="asym">${asset.symbol}</div>${stockBadge}</div>
+      <div class="pblock"><div class="price">${fmtPrice(asset.price)}</div><div class="chg ${asset.chg24>=0?'up':'dn'}">${asset.chg24>=0?'▲':'▼'} ${Math.abs(asset.chg24).toFixed(2)}%</div></div>
+    </div>
+    <div class="spark" id="sw-${asset.symbol}" title="Tap to expand chart"></div>
+    <div class="inds">
+      <div class="ind"><div class="ilabel">RSI (14)</div><div class="ival" style="color:${rsiCol}">${rsi!==null?rsi.toFixed(1):'—'}</div><div class="isig" style="color:${rsiCol}">${rsiLbl}</div><div class="bar-bg"><div class="bar-fill" style="width:${rsi||0}%;background:${rsiCol}"></div></div></div>
+      <div class="ind"><div class="ilabel">24H CHANGE</div><div class="ival" style="color:${asset.chg24>=0?'var(--green)':'var(--red)'}">${asset.chg24>=0?'+':''}${asset.chg24.toFixed(2)}%</div><div class="isig" style="color:var(--muted)">${Math.abs(asset.chg24)>6?'VOLATILE':'STABLE'}</div><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(Math.abs(asset.chg24)*4,100)}%;background:${asset.chg24>=0?'var(--green)':'var(--red)'}"></div></div></div>
+      <div class="ind"><div class="ilabel">MA20</div><div class="ival" style="color:${ma20s==='above'?'var(--green)':'var(--red)'}">${fmtPrice(sma20)}</div>${ma20s?`<span class="ma-tag ${ma20s}">PRICE ${ma20s.toUpperCase()}</span>`:''}</div>
+      <div class="ind"><div class="ilabel">MA50</div><div class="ival" style="color:${ma50s==='above'?'var(--green)':'var(--red)'}">${fmtPrice(sma50)}</div>${ma50s?`<span class="ma-tag ${ma50s}">PRICE ${ma50s.toUpperCase()}</span>`:''}</div>
+    </div>
+    <div class="sbadge ${signal}"><span class="pdot"></span> ${signal} — ${reason}</div>
+    ${stockNote}`;
+
+  const gridId=asset.type==='metals'?'metalsGrid':asset.type==='stocks'?'stocksGrid':'cryptoGrid';
+  document.getElementById(gridId).appendChild(card);
+
+  // Draw mini sparkline
+  setTimeout(()=>{
+    const wrap=document.getElementById(`sw-${asset.symbol}`);
+    if(!wrap)return;
+    const canvas=document.createElement('canvas');
+    wrap.appendChild(canvas);
+    const ctx=canvas.getContext('2d');
+    if(charts[asset.symbol])charts[asset.symbol].destroy();
+    const isUp=spark[spark.length-1]>=spark[0];
+    const lc=isUp?'#00ff88':'#ff3d5a';
+    charts[asset.symbol]=new Chart(ctx,{
+      type:'line',
+      data:{labels:spark.map((_,i)=>i),datasets:[{data:spark,borderColor:lc,borderWidth:1.5,pointRadius:0,fill:true,tension:0.3,backgroundColor:c=>{const g=c.chart.ctx.createLinearGradient(0,0,0,90);g.addColorStop(0,isUp?'rgba(0,255,136,.18)':'rgba(255,61,90,.18)');g.addColorStop(1,'rgba(0,0,0,0)');return g;}}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}
+    });
+    // Click to expand — always look up fresh asset from allAssetData so timeframe is current
+    wrap.addEventListener('click',()=>{
+      const fresh = allAssetData.find(a=>a.symbol===asset.symbol) || asset;
+      openChart(fresh);
+    });
+  },60);
+
+  return{signal,symbol:asset.symbol,type:asset.type};
+}
+
+function updateSigBar(signals){
+  const bar=document.getElementById('sigBar');bar.innerHTML='';
+  const active=signals.filter(s=>s&&s.signal!=='HOLD');
+  if(!active.length){bar.innerHTML='<div style="font-family:Space Mono;font-size:9px;color:var(--muted);letter-spacing:2px">NO STRONG SIGNALS</div>';return;}
+  active.forEach((s,i)=>{
+    const hidden=!isVisible(s.symbol);
+    let cls;
+    if(s.type==='stocks'){cls=s.signal==='BUY'?'stock-buy':s.signal==='SELL'?'stock-sell':'stock-watch';}
+    else{cls=s.signal==='BUY'?'buy':s.signal==='SELL'?'sell':'watch';}
+    if(hidden)cls+=' hidden-asset';
+    const p=document.createElement('div');
+    p.className=`pill ${cls}`;
+    p.style.animationDelay=`${i*0.07}s`;
+    p.title=hidden?`${s.symbol} not in watchlist — tap to add`:'';
+    p.innerHTML=`<span class="pdot"></span>${s.symbol}${hidden?' 👁':''}: ${s.signal}`;
+    if(hidden){
+      p.addEventListener('click',()=>openSettings());
+    } else {
+      p.addEventListener('click',()=>{
+        const asset=allAssetData.find(a=>a.symbol===s.symbol);
+        if(asset)openChart(asset);
+      });
+    }
+    bar.appendChild(p);
+  });
+}
+
+// ── MAIN LOAD ────────────────────────────────────────────────
+async function loadAll(){
+  const btn=document.getElementById('refreshBtn');
+  btn.disabled=true;btn.textContent='↻ LOADING...';
+  document.getElementById('errBar').style.display='none';
+  document.getElementById('apiSrc').textContent='';
+  document.getElementById('metalsGrid').innerHTML='';
+  document.getElementById('cryptoGrid').innerHTML='';
+  document.getElementById('stocksGrid').innerHTML='';
+  Object.values(charts).forEach(c=>c.destroy());charts={};
+  if(modalChart){modalChart.destroy();modalChart=null;}
+  activeTab='crypto';activeSignal='all';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.crypto-tab').classList.add('active');
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active-buy','active-sell','active-hold'));
+  clearSearch();
+  // Reset section labels
+  ['metalsLabel','cryptoLabel','stocksLabel'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='';});
+
+  const loader=document.getElementById('loader');
+  const isFirstLoad = loader.style.display !== 'none';
+  if(!isFirstLoad){
+    btn.textContent='↻ LOADING...';
+  } else {
+    loader.style.display='flex';
+    loader.classList.remove('hide');
+  }
+  document.getElementById('lfill').style.width='10%';
+  document.getElementById('lsub').textContent='FETCHING METALS...';
+
+  try {
+    const metalAssets=await fetchMetals();
+    document.getElementById('lfill').style.width='30%';
+    document.getElementById('lsub').textContent='FETCHING TOP 50 CRYPTO...';
+
+    let cryptoAssets=[],source='';
+    try{cryptoAssets=await tryCoingecko();source='CoinGecko';}
+    catch(e){console.warn('CoinGecko failed:',e.message);try{cryptoAssets=await tryCoincap();source='CoinCap';}catch(e2){console.warn('CoinCap failed:',e2.message);}}
+    updateCryptoMaster(cryptoAssets);
+
+    document.getElementById('lfill').style.width='60%';
+    document.getElementById('lsub').textContent='ALMOST THERE...';
+    document.getElementById('lfill').style.width='85%';
+    document.getElementById('lsub').textContent='BUILDING SIGNALS...';
+
+    // Phase 1 — render metals + crypto immediately
+    allAssetData=[...metalAssets,...cryptoAssets];
+    const signals=[];
+    allAssetData.forEach((a,i)=>{const s=renderCard(a,i);if(s)signals.push(s);});
+    updateSigBar(signals);
+    updateMarketStatus();
+    document.getElementById('ts').textContent='LIVE · '+new Date().toLocaleTimeString();
+    // Wait for card DOM to settle before filtering
+    setTimeout(()=>applyFilters(), 150);
+    document.getElementById('apiSrc').textContent='DATA: '+(source||'COINGECKO').toUpperCase()+' + FINNHUB STOCKS · PRICES IN USD · TAP ANY CHART TO EXPAND';
+
+    document.getElementById('lfill').style.width='100%';
+    if(isFirstLoad){
+      launchRocket();
+      setTimeout(()=>{
+        loader.classList.add('hide');
+        setTimeout(()=>{ loader.style.display='none'; },700);
+        setTimeout(()=>{
+          document.getElementById('siteHeader').classList.add('visible');
+          document.querySelector('.wrap').classList.add('header-shown');
+        },400);
+      },1200);
+    } else {
+      setTimeout(()=>{
+        loader.classList.add('hide');
+        setTimeout(()=>{ loader.style.display='none'; },650);
+      },300);
+    }
+
+    if(!cryptoAssets.length){
+      document.getElementById('errBar').style.display='block';
+      document.getElementById('errBar').textContent='⚠ Crypto prices unavailable — try refreshing in 30 seconds.';
+    }
+
+    // Phase 2 — load stocks in background after page is visible
+    if(FINNHUB_KEY!=='YOUR_API_KEY_HERE'){
+      document.getElementById('stocksLabel').textContent='📈 STOCKS — LOADING...';
+      fetchAllStocks().then(stockAssets=>{
+        stockAssets.forEach((a,i)=>{
+          const s=renderCard(a,allAssetData.length+i);
+          if(s)signals.push(s);
+        });
+        allAssetData=[...allAssetData,...stockAssets];
+        updateSigBar(signals);
+        document.getElementById('stocksLabel').textContent='📈 STOCKS';
+        document.getElementById('ts').textContent='LIVE · '+new Date().toLocaleTimeString();
+        setTimeout(()=>applyFilters(), 150);
+      }).catch(e=>{
+        console.warn('Stocks failed:',e.message);
+        document.getElementById('stocksLabel').textContent='📈 STOCKS — UNAVAILABLE';
+      });
+    }
+  } catch(e){
+    loader.classList.add('hide');
+    setTimeout(()=>{ loader.style.display='none'; },650);
+    setTimeout(()=>{ document.getElementById('siteHeader').classList.add('visible'); document.querySelector('.wrap').classList.add('header-shown'); },400);
+    document.getElementById('errBar').style.display='block';
+    document.getElementById('errBar').textContent='⚠ '+e.message;
+  }
+
+  btn.disabled=false;btn.textContent='↻ REFRESH';
+}
+
+// Generate shooting stars during hero
+function generateStars(){
+  const container=document.getElementById('heroStars');
+  if(!container)return;
+
+  function launchStar(){
+    const s=document.createElement('div');
+    s.className='shooting-star';
+
+    // Random start position along edges
+    const side=Math.floor(Math.random()*4);
+    let startX,startY,dx,dy;
+    const dist=Math.random()*300+200;
+    const angle=Math.random()*60-30; // degrees variance from main direction
+
+    if(side===0){// top
+      startX=Math.random()*100; startY=-2;
+      dx=(Math.random()-0.5)*200; dy=dist;
+    } else if(side===1){// right
+      startX=102; startY=Math.random()*100;
+      dx=-dist; dy=(Math.random()-0.5)*200;
+    } else if(side===2){// left
+      startX=-2; startY=Math.random()*100;
+      dx=dist; dy=(Math.random()-0.5)*200;
+    } else {// top-left corner area (most natural for shooting stars)
+      startX=Math.random()*30; startY=Math.random()*30;
+      dx=dist*0.7; dy=dist*0.7;
+    }
+
+    const deg=Math.atan2(dy,dx)*180/Math.PI;
+    const dur=(Math.random()*1.5+0.8).toFixed(2);
+
+    s.style.cssText=`
+      left:${startX}%;top:${startY}%;
+      --angle:${deg}deg;
+      --dx:${dx}px;--dy:${dy}px;
+      animation:shoot ${dur}s ease-in forwards;
+    `;
+
+    // Vary tail length
+    const tail=Math.random()*120+40;
+    s.style.setProperty('--tail',tail+'px');
+    s.innerHTML=`<span style="position:absolute;top:50%;left:0;transform:translateY(-50%);width:${tail}px;height:1px;background:linear-gradient(to left,rgba(255,255,255,.9),transparent);display:block;"></span>`;
+
+    container.appendChild(s);
+    setTimeout(()=>{ if(s.parentNode)s.parentNode.removeChild(s); },(parseFloat(dur)+0.2)*1000);
+  }
+
+  // Launch stars at random intervals while loader is visible
+  let shooting=true;
+  function scheduleNext(){
+    if(!shooting)return;
+    launchStar();
+    // Sometimes launch 2 close together
+    if(Math.random()>0.7) setTimeout(launchStar, 200);
+    setTimeout(scheduleNext, Math.random()*1800+600);
+  }
+  scheduleNext();
+
+  // Stop when loader hides
+  const observer=new MutationObserver(()=>{
+    if(document.getElementById('loader').classList.contains('hide')) shooting=false;
+  });
+  observer.observe(document.getElementById('loader'),{attributes:true,attributeFilter:['class']});
+}
+
+window.addEventListener('load',()=>{
+  loadWatchlist();
+  initTimeframe();
+  generateStars();
+  setTimeout(loadAll,300);
+});
+
+// Register service worker for PWA
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js')
+      .then(()=>console.log('✅ SW registered'))
+      .catch(e=>console.warn('SW registration failed:',e));
+  });
+}
+
+// Hide header on scroll down, show on scroll up
+let lastScroll=0;
+window.addEventListener('scroll',()=>{
+  const header=document.getElementById('siteHeader');
+  const wrap=document.querySelector('.wrap');
+  if(!header.classList.contains('visible'))return;
+  const curr=window.scrollY;
+  if(curr<=10){
+    header.classList.remove('hidden');
+    wrap.classList.add('header-shown');
+    return;
+  }
+  if(curr>lastScroll+5){
+    header.classList.add('hidden');
+    wrap.classList.remove('header-shown');
+  } else if(curr<lastScroll-5){
+    header.classList.remove('hidden');
+    wrap.classList.add('header-shown');
+  }
+  lastScroll=curr;
+},{ passive:true });
+</script>
+</body>
+</html>
